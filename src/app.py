@@ -126,28 +126,27 @@ def main():
             rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
             ### Statefully manage chat history ###
-            store = {}
+            #store = {}
+            
+            if "chat_history" not in st.session_state:
+                st.session_state.chat_history=[]            
 
-            def get_session_history(session_id: str) -> BaseChatMessageHistory:
-                if session_id not in store:
-                    store[session_id] = ChatMessageHistory()
-                return store[session_id]
-
-
-            conversational_rag_chain = RunnableWithMessageHistory(
-                rag_chain,
-                get_session_history,
-                input_messages_key="input",
-                history_messages_key="chat_history",
-                output_messages_key="answer",
-            )
+            # def get_session_history(session_id: str) -> BaseChatMessageHistory:
+            #     if session_id not in store:
+            #         store[session_id] = ChatMessageHistory()
+            #     return store[session_id]
 
 
-            if "historical_chat" not in st.session_state:
-                st.session_state.historical_chat = []
+            # conversational_rag_chain = RunnableWithMessageHistory(
+            #     rag_chain,
+            #     get_session_history,
+            #     input_messages_key="input",
+            #     history_messages_key="chat_history",
+            #     output_messages_key="answer",
+            # )
 
             #continued conversation like appearance in UI
-            for message in st.session_state.historical_chat:
+            for message in st.session_state.chat_history:
                 if isinstance(message, HumanMessage):
                     with st.chat_message("Human"):
                         st.markdown(message.content)
@@ -155,25 +154,32 @@ def main():
                     with st.chat_message("AI"):
                         st.markdown(message.content)
 
-            query = st.chat_input("Ask relevant questions on your document")
-            if query is not None and query !="":
-                st.session_state.historical_chat.append(HumanMessage(query))
+            # if "historical_chat" not in st.session_state:
+            #     st.session_state.historical_chat = []
+            query = st.chat_input("Ask relevant questions on your document.")
+                                        
+            if query is not None and query !="":    
+
+                # st.session_state.historical_chat.append(HumanMessage(query))
+                st.session_state.chat_history.append(HumanMessage(query))
 
                 with st.chat_message("Human"):
                     st.markdown(query)
 
-                ai_response = conversational_rag_chain.invoke(
-                    {"input": query},
-                    config={
-                        "configurable": {"session_id": "abc123"}
-                    },  # constructs a key "abc123" in `store`.
-                )["answer"]
+                ai_response = rag_chain.invoke({"input":query,"chat_history":st.session_state.chat_history})["answer"]
+
+                # ai_response = conversational_rag_chain.invoke(
+                #     {"input": query},
+                #     config={
+                #         "configurable": {"session_id": "abc123"}
+                #     },  # constructs a key "abc123" in `store`.
+                # )["answer"]
                 
-                with st.chat_message("AI"):
-                    
+                with st.chat_message("AI"):                    
                     st.markdown(ai_response)
 
-                st.session_state.historical_chat.append(AIMessage(ai_response))
+                #st.session_state.historical_chat.append(AIMessage(ai_response))
+                st.session_state.chat_history.append(AIMessage(ai_response))
 
         
         

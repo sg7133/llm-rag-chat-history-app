@@ -1,11 +1,11 @@
-Version = 1.1
+Version = 1.2
 
 ## Release Notes
 
 
 1. Upload single PDF document to a folder and use RAG and vectorstore to ask relevant questions from the document
 2. Made the output of the llm cleaner by hiding the RAG context and question being repeated in the llm response
-3. add capability to chat with contex
+3. add capability to chat with context
 
 
 
